@@ -14,7 +14,7 @@ namespace zizo_shop.Domain.Entities
         public decimal Price { get; set; }
         public decimal? DiscountPrice { get; set; }
 
-        public int Stock { get; set; }
+        public int StockQuantity { get; set; }
         public string SKU { get; set; }
 
         public bool IsActive { get; set; } = true;

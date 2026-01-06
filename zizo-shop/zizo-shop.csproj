@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -6,6 +6,17 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>zizo_shop</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Infrastructure\NewFolder\**" />
+    <Content Remove="Infrastructure\NewFolder\**" />
+    <EmbeddedResource Remove="Infrastructure\NewFolder\**" />
+    <None Remove="Infrastructure\NewFolder\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Properties\launchSettings.json" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MediatR" Version="14.0.0" />
@@ -26,11 +37,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Application\Features\Auth\Queries\" />
-    <Folder Include="Application\Features\Products\Commands\Interfaces\" />
     <Folder Include="Application\Services\" />
     <Folder Include="Infrastructure\Repositories\" />
-    <Folder Include="Infrastructure\NewFolder\" />
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>

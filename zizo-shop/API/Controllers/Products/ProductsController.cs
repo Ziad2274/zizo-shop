@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using zizo_shop.Application.Features.Products;
 using zizo_shop.Application.Features.Products.Queries;
 
-namespace zizo_shop.API.Controllers
+namespace zizo_shop.API.Controllers.Products
 {
     [ApiController]
     [Route("api/products")]

@@ -23,7 +23,10 @@ namespace zizo_shop.Application.Handellers.Products
         {
             _context = context;
         }
-
+        /*
+         * Handler needs to talk to database
+           But we don’t want EF Core directly
+           So we depend on an interface*/
         public async Task<Guid> Handle(
             CreateProductCommand request,
             CancellationToken cancellationToken)
@@ -34,7 +37,7 @@ namespace zizo_shop.Application.Handellers.Products
                 Name = request.Name,
                 Description = request.Description,
                 Price = request.Price,
-                Stock = request.Stock,
+                StockQuantity = request.Stock,
                 CategoryId = request.CategoryId
             };
 

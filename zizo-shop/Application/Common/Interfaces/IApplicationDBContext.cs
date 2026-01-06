@@ -5,8 +5,9 @@ namespace zizo_shop.Application.Common.Interfaces
 {
     public interface IApplicationDbContext
     {
-        internal DbSet<Product> Products { get; }
-
+        DbSet<Product> Products { get; }
+        DbSet<Category> Categories { get; }
+        DbSet<Order> Orders { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);
     }
 }

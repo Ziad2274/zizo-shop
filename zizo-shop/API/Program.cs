@@ -1,10 +1,14 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
+using zizo_shop.API.Services;
+using zizo_shop.Application.Common.Interfaces;
+using zizo_shop.Application.Features.Auth.Commands;
 using zizo_shop.Infrastructure.Data;
 using zizo_shop.Infrastructure.Identity;
-using Microsoft.OpenApi.Models;
 
 namespace zizo_shop.API
 {
@@ -15,13 +19,54 @@ namespace zizo_shop.API
             var builder = WebApplication.CreateBuilder(args);
 
             // --- SERVICES REGISTRATION SECTION ---
+
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer(); // Ensure this is here
+            #region Database Configuration
 
-            // Identity Configuration
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            builder.Services.AddScoped<IApplicationDbContext>(provider =>
+                provider.GetRequiredService<ApplicationDbContext>());
+            #endregion
+            #region Identity Configuration
+            builder.Services
+              .AddIdentity<ApplicationUser, IdentityRole<Guid>>(options=>
+                {
+                    options.Password.RequireDigit = true;
+                    options.Password.RequireLowercase = true;
+                    options.Password.RequireUppercase = true;
+                    options.Password.RequireNonAlphanumeric = false;
+                    options.Password.RequiredLength = 6;
+                    options.User.RequireUniqueEmail = true;
+                    options.SignIn.RequireConfirmedEmail = false;
+                }
+                )
+              .AddEntityFrameworkStores<ApplicationDbContext>()
+              .AddDefaultTokenProviders();
+
+            builder.Services.AddAuthentication()
+              .AddJwtBearer(options =>
+                {
+                options.TokenValidationParameters = new TokenValidationParameters
+                  {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                        ValidAudience = builder.Configuration["Jwt:Audience"],
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+                    };
+                });
+
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+            builder.Services.AddMediatR(cfg =>
+                cfg.RegisterServicesFromAssembly(typeof(RegisterCommand).Assembly));
+            #endregion
 
             // Swagger Configuration
             builder.Services.AddSwaggerGen(c =>
@@ -52,23 +97,7 @@ namespace zizo_shop.API
                 });
             });
 
-            // MOVED: Authentication must be registered BEFORE builder.Build()
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
-                {
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateLifetime = true,
-                        ValidateIssuerSigningKey = true,
-                        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                        ValidAudience = builder.Configuration["Jwt:Audience"],
-                        IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
-                        )
-                    };
-                });
+          
 
             builder.Services.AddAuthorization();
 
@@ -104,6 +133,7 @@ namespace zizo_shop.API
                 }
             }
 
+      
             app.MapControllers();
             app.Run();
         }
