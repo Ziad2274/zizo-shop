@@ -38,7 +38,16 @@ namespace zizo_shop.Application.Handellers.Products
                 Description = request.Description,
                 Price = request.Price,
                 StockQuantity = request.Stock,
-                CategoryId = request.CategoryId
+                CategoryId = request.CategoryId,
+                Images = request.Images.Select(img=> new ProductImage
+                {
+                    ImageUrl= img.ImageUrl,
+                    ProductId= img.ProductId,
+                    IsCover= img.IsCover,
+                    CreatedAt= DateTime.UtcNow,
+
+
+                }).ToList()
             };
 
             _context.Products.Add(product);

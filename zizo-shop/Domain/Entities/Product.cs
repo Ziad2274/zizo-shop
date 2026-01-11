@@ -18,11 +18,13 @@ namespace zizo_shop.Domain.Entities
         public string SKU { get; set; }
 
         public bool IsActive { get; set; } = true;
-
+        public Guid BrandId { get; set; }
+        public Brand Brand { get; set; } = null!;
+        public Guid? MainImageId { get; set; }
         public Guid CategoryId { get; set; }
         public Category Category { get; set; }
 
-        public ICollection<ProductImage> Images { get; set; }
+        public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
         public ICollection<Review> Reviews { get; set; }
     }
 

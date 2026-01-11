@@ -11,12 +11,14 @@ namespace zizo_shop.API.Services
         {
             _httpContextAccessor = httpContextAccessor;
         }
-        public Guid UserId =>
-            Guid.Parse(
-                _httpContextAccessor.HttpContext!
-                    .User
-                    .FindFirstValue(ClaimTypes.NameIdentifier)!
-            );
 
+        public Guid UserId
+        {
+            get
+            {
+                var id = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+                return Guid.TryParse(id, out var parsedGuid) ? parsedGuid : Guid.Empty;
+            }
+        }
     }
 }

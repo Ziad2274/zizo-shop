@@ -2,7 +2,7 @@
 
 namespace zizo_shop.Application.Features.Cart.Commands
 {
-    public record AddToCartCommand(
+    public record AddToWishlistCommand(
         Guid ProductId,
         int Quantity
         ) : IRequest;

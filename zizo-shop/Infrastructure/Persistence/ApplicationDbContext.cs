@@ -22,6 +22,10 @@ namespace zizo_shop.Infrastructure.Data
             builder.Entity<OrderItem>().Property(oi => oi.Price).HasColumnType("decimal(18,2)");
             builder.Entity<Product>().Property(p => p.Price).HasColumnType("decimal(18,2)");
             builder.Entity<Product>().Property(p => p.DiscountPrice).HasColumnType("decimal(18,2)");
+            builder.Entity<Product>().HasOne(p => p.Brand).WithMany(b => b.Products).HasForeignKey(p => p.BrandId);
+            builder.Entity<ProductImage>().HasOne(i => i.Product).WithMany(p => p.Images).HasForeignKey(i => i.ProductId);
+            builder.Entity<WishlistItem>().HasIndex(w => new { w.UserId, w.ProductId }).IsUnique();
+
         }
 
         public DbSet<Product> Products => Set<Product>();
@@ -31,7 +35,9 @@ namespace zizo_shop.Infrastructure.Data
         public DbSet<CartItem> CartItems => Set<CartItem>();
         public DbSet<Order> Orders => Set<Order>();
         public DbSet<OrderItem> OrderItems => Set<OrderItem>();
-
+        public DbSet<Brand> Brands => Set<Brand>();
+        public DbSet<ProductImage> ProductImages => Set<ProductImage>();
+        public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
         public async Task<int> SaveChangesAsync(
             CancellationToken cancellationToken = default)
             => await base.SaveChangesAsync(cancellationToken);

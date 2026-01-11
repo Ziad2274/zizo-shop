@@ -1,6 +1,6 @@
 ﻿using zizo_shop.Domain.Entities;
 
-namespace zizo_shop.Application.DTOs
+namespace zizo_shop.Application.DTOs.Product
 {
     public class ProductDto
     {
@@ -15,11 +15,11 @@ namespace zizo_shop.Application.DTOs
             public string SKU { get; set; }
 
             public bool IsActive { get; set; } = true;
-
+            public bool IsInWishlist { get; set; }
             public Guid CategoryId { get; set; }
-            public Category Category { get; set; }
+            public string CategoryName { get; set; }
 
-            public ICollection<ProductImage> Images { get; set; }
+        public ICollection<ProductImage> Images { get; set; }
             public ICollection<Review> Reviews { get; set; }
         
 

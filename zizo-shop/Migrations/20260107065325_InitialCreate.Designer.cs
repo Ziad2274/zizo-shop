@@ -12,8 +12,8 @@ using zizo_shop.Infrastructure.Data;
 namespace zizo_shop.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260106205121_InitialEcommerceSchema")]
-    partial class InitialEcommerceSchema
+    [Migration("20260107065325_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
