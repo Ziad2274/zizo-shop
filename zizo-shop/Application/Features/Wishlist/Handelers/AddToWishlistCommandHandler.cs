@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using zizo_shop.Application.Common.Interfaces;
 using zizo_shop.Application.Features.Cart.Commands;
+using zizo_shop.Application.Features.Wishlist.Commands;
 using zizo_shop.Domain.Entities;
 namespace zizo_shop.Application.Features.Wishlist.Handelers
 {

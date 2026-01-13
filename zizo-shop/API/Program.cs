@@ -11,6 +11,7 @@ using zizo_shop.Application.Features.Auth.Commands;
 using zizo_shop.Application.Features.Auth.Handlers;
 using zizo_shop.Infrastructure.Data;
 using zizo_shop.Infrastructure.Identity;
+using zizo_shop.Infrastructure.Services;
 
 namespace zizo_shop.API
 {
@@ -74,6 +75,7 @@ namespace zizo_shop.API
 
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+            builder.Services.AddScoped<IFileService, FileService>();
             builder.Services.AddMediatR(cfg =>
                 cfg.RegisterServicesFromAssembly(typeof(RegisterCommand).Assembly));
             #endregion
