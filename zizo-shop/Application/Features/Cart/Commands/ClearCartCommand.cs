@@ -2,5 +2,5 @@
 
 namespace zizo_shop.Application.Features.Cart.Commands
 {
-    public record RemoveFromCartCommand(Guid ProductId) : IRequest<Unit>;
+    public record ClearCartCommand() : IRequest<Unit>;
 }

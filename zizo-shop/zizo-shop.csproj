@@ -37,7 +37,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Application\Features\Checkout\Queries\" />
     <Folder Include="Application\Services\" />
     <Folder Include="Infrastructure\Repositories\" />
     <Folder Include="Migrations\" />

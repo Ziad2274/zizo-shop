@@ -1,6 +1,6 @@
-﻿namespace zizo_shop.Application.Features.Cart.Commands
+﻿using MediatR;
+
+namespace zizo_shop.Application.Features.Cart.Commands
 {
-    public class UpdateCartQuaantityCommand
-    {
-    }
+    public record UpdateCartItemQuantityCommand(Guid ProductId, int Quantity) : IRequest<Unit>;
 }
