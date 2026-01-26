@@ -27,24 +27,13 @@ namespace zizo_shop.Application.Features.Checkout.Handlers
                 .Include(i => i.Items)
                 .ThenInclude(p => p.Product)
                 .FirstOrDefaultAsync(c => c.UserId == userId);
-            var order = new Order { UserId = userId };
+            var order = new Order (userId) ;
             foreach (var item in cart.Items)
             {
-                if (item.Quantity > item.Product.StockQuantity)
-                {
-                    throw new InvalidOperationException(
-                        $"Insufficient stock for product {item.Product.Name}.");
-                }
-                item.Product.StockQuantity -= item.Quantity;
-
-                order.Items.Add(new OrderItem
-                {
-                    ProductId = item.ProductId,
-                    Quantity = item.Quantity,
-                    Price = item.Product.DiscountPrice ?? item.Product.Price
-                });
+                
+                item.Product.RemoveStock(item.Quantity);
+                order.AddItem(item.Product,item.Quantity);
             }          
-            order.TotalPrice = order.Items.Sum(i => i.Price * i.Quantity);
             _context.Orders.Add(order);
             _context.Carts.Remove(cart);
             await _context.SaveChangesAsync(cancellationToken);

@@ -151,8 +151,9 @@ namespace zizo_shop.API
                     logger.LogError(ex, "An error occurred seeding the DB.");
                 }
             }
-
-
+            app.UseRouting();
+            app.UseStaticFiles();
+            
             app.MapControllers();
             app.Run();
         }

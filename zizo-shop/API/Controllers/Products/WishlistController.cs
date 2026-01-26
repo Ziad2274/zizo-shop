@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using zizo_shop.Application.Features.Wishlist.Commands;
@@ -10,6 +11,7 @@ namespace zizo_shop.API.Controllers.Products
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class WishlistController : ControllerBase
     {
 
@@ -21,7 +23,7 @@ namespace zizo_shop.API.Controllers.Products
         [HttpGet()]
         public async Task<IActionResult> GetMyWishlist()
         {
-            return Ok(_mediator.Send(new GetMyWishlistQuery()));
+            return Ok(await _mediator.Send(new GetMyWishlistQuery()));
         }
 
         // POST api/<WishlistController>

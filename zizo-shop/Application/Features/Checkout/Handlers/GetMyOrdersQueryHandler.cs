@@ -1,12 +1,13 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using zizo_shop.Application.Common.Interfaces;
+using zizo_shop.Application.DTOs.Order;
 using zizo_shop.Application.Features.Checkout.Queries;
 using zizo_shop.Domain.Entities;
 
 namespace zizo_shop.Application.Features.Checkout.Handlers
 {
-    public class GetMyOrdersQueryHandler : IRequestHandler<GetMyOrdersQuery, List<Order>>
+    public class GetMyOrdersQueryHandler : IRequestHandler<GetMyOrdersQuery, List<OrderDto>>
     {
         private readonly IApplicationDbContext _context;
         private readonly ICurrentUserService _currentUserService;
@@ -16,13 +17,13 @@ namespace zizo_shop.Application.Features.Checkout.Handlers
             _context = context;
             _currentUserService = currentUserService;
         }
-        public async Task<List<Order>> Handle(GetMyOrdersQuery request, CancellationToken cancellationToken)
+        public async Task<List<OrderDto>> Handle(GetMyOrdersQuery request, CancellationToken cancellationToken)
         {
             var userId = _currentUserService.UserId;
-            var oreders= await _context.Orders
+            return await _context.Orders
                 .Where(o => o.UserId == userId)
                 .OrderByDescending(o => o.CreatedAt)
-                .Select(o=>new Order(
+                .Select(o=>new OrderDto(
                     o.Id,
                     o.CreatedAt,
                     o.TotalPrice,

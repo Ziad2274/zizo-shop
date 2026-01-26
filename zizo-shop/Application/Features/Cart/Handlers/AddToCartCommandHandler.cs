@@ -9,40 +9,32 @@ namespace zizo_shop.Application.Features.Cart.Handelers
         private readonly IApplicationDbContext _context;
         private readonly ICurrentUserService _currentUserService;
 
-        public AddToCartCommandHandler(IApplicationDbContext context)
+       public AddToCartCommandHandler(
+            IApplicationDbContext context,
+            ICurrentUserService currentUserService
+            )
         {
-            this._context = context;
+            _context = context;
+            _currentUserService = currentUserService;
         }
         public async Task  Handle(AddToCartCommand request, CancellationToken cancellationToken)
         {
             var userId = _currentUserService.UserId;
-            var cart=await _context.Carts
-                .Include(c=>c.Items)
-                .FirstOrDefaultAsync(c => c.UserId == userId,cancellationToken);
-            if(cart==null)
+            var product = await _context.Products
+                .FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken);
+            if (product == null)
+                throw new Exception("Product not found.");
+            var cart = await _context.Carts.Include(c=>c.Items)
+                .FirstOrDefaultAsync(c => c.UserId == userId, cancellationToken);
+            if (cart == null)
             {
-                cart=new Domain.Entities.Cart 
-                {
-                    UserId=userId,
-                    Items=new List<Domain.Entities.CartItem>()
-                };
+                cart = new Domain.Entities.Cart
+                (
+                     userId
+               );           
                 _context.Carts.Add(cart);
             }
-            var cartItem=cart.Items
-                .FirstOrDefault(pi => pi.ProductId == request.ProductId );
-            if(cartItem!=null)
-                cartItem.Quantity+=request.Quantity;
-            else
-            { 
-                cart.Items.Add(
-                    new Domain.Entities.CartItem
-                    {
-                        ProductId=request.ProductId,
-                        Quantity=request.Quantity
-                    }
-
-                    );
-            }
+            cart.AddItem(product, request.Quantity);
             await _context.SaveChangesAsync(cancellationToken);
 
 

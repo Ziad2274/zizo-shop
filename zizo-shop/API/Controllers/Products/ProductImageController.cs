@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using zizo_shop.Application.Common.Interfaces;
+using zizo_shop.Application.Features.Products.Commands;
+using zizo_shop.Infrastructure.Services;
 
 namespace zizo_shop.API.Controllers.Products
 {
@@ -8,26 +11,22 @@ namespace zizo_shop.API.Controllers.Products
     [ApiController]
     public class ProductImageController : ControllerBase
     {
-        private readonly IApplicationDbContext _context;
-        private readonly IFileService _fileService;
-        public ProductImageController( IApplicationDbContext context, IFileService fileService)
+   
+       private readonly IMediator _mediator;
+        public ProductImageController(IMediator mediator)
         {
-            _context = context;
-            _fileService = fileService;
+            _mediator = mediator;
+            
         }
+
         [HttpPost("Upload")]
-        public async Task<IActionResult> UploadImage(Guid productId,[FromForm] IFormFile file)
+        public async Task<IActionResult> UploadImage([FromForm] Guid productId,[FromForm] IFormFile file)
         {
+            var imageUrl = await _mediator.Send(new UploadProductImageCommand{ ProductId = productId, File = file });
+
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded.");
-            
-            var imageUrl = await _fileService.UploadFileAsync(file,"products") ;
-            _context.ProductImages.Add(new Domain.Entities.ProductImage
-            {
-                ProductId = productId,
-                ImageUrl = imageUrl
-            });
-           await _context.SaveChangesAsync();
+           
             return Ok(new { ImageUrl = imageUrl });
         }
 

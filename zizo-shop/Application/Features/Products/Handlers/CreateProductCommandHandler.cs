@@ -1,19 +1,11 @@
 ﻿using MediatR;
-using Microsoft.AspNetCore.Authorization;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using zizo_shop.Application.Common.Interfaces;
 using zizo_shop.Application.Features.Products;
 using zizo_shop.Domain.Entities;
-using zizo_shop.Infrastructure.Identity;
 
 namespace zizo_shop.Application.Handellers.Products
 {
-    [Authorize(Roles = "Admin")]
-
+    // Note: [Authorize] should be moved to the Controller, not the Handler.
     public class CreateProductCommandHandler
         : IRequestHandler<CreateProductCommand, Guid>
     {
@@ -23,32 +15,29 @@ namespace zizo_shop.Application.Handellers.Products
         {
             _context = context;
         }
-        /*
-         * Handler needs to talk to database
-           But we don’t want EF Core directly
-           So we depend on an interface*/
+
         public async Task<Guid> Handle(
             CreateProductCommand request,
             CancellationToken cancellationToken)
         {
-            var product = new Product
+      
+
+            var product = new Product(
+                request.Name,
+                request.Description,
+                request.Price,
+                request.Stock,
+                request.CategoryId
+            );
+
+            foreach (var img in request.Images)
             {
-                Id = Guid.NewGuid(),
-                Name = request.Name,
-                Description = request.Description,
-                Price = request.Price,
-                StockQuantity = request.Stock,
-                CategoryId = request.CategoryId,
-                Images = request.Images.Select(img=> new ProductImage
+                product.Images.Add(new ProductImage
                 {
-                    ImageUrl= img.ImageUrl,
-                    ProductId= img.ProductId,
-                    IsCover= img.IsCover,
-                    CreatedAt= DateTime.UtcNow,
-
-
-                }).ToList()
-            };
+                    ImageUrl = img.ImageUrl,
+                    IsCover = img.IsCover
+                });
+            }
 
             _context.Products.Add(product);
             await _context.SaveChangesAsync(cancellationToken);
@@ -56,5 +45,4 @@ namespace zizo_shop.Application.Handellers.Products
             return product.Id;
         }
     }
-
 }

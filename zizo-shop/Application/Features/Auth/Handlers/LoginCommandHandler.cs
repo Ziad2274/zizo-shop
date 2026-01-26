@@ -1,10 +1,10 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using zizo_shop.Application.Common.Interfaces;
 using zizo_shop.Application.Features.Auth.Commands;
 using zizo_shop.Infrastructure.Data;
 using zizo_shop.Infrastructure.Identity;
@@ -16,7 +16,7 @@ namespace zizo_shop.Application.Features.Auth.Handlers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
-        private readonly ApplicationDbContext _context;
+        private readonly IApplicationDbContext _context;
         public LoginCommandHandler(
             UserManager<ApplicationUser> userManager,
             IConfiguration configuration

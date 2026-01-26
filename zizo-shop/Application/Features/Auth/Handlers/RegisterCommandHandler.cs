@@ -25,11 +25,11 @@ namespace zizo_shop.Application.Features.Auth.Handlers
                 PhoneNumber = request.Phone,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
-                Cart = new zizo_shop.Domain.Entities.Cart 
-                {
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                }
+                Cart = new zizo_shop.Domain.Entities.Cart (
+                    Guid.NewGuid())
+
+
+
             };
 
             var result = await _userManager.CreateAsync(user, request.Password);

@@ -24,13 +24,14 @@ namespace zizo_shop.Infrastructure.Data
             {
                 adminUser = new ApplicationUser
                 {
+                    Id= Guid.NewGuid(),
                     UserName = adminEmail,
                     Email = adminEmail,
                     FirstName = "Admin",
                     LastName = "User",
                     EmailConfirmed = true,
-                    Cart = new Cart { CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow } // Required if you have the Cart relationship
                 };
+                adminUser.Cart = new Cart(adminUser.Id);
 
                 await userManager.CreateAsync(adminUser, "Admin@123");
                 await userManager.AddToRoleAsync(adminUser, "Admin");
