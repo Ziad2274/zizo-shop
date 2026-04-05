@@ -2,6 +2,6 @@
 
 namespace zizo_shop.Application.Features.Checkout.Commands
 {
-    public record CheckoutCommand() : IRequest<Guid>;
+    public record CheckoutCommand( Guid AddressId) : IRequest<Guid>;
 
 }

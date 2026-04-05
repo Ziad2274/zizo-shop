@@ -25,7 +25,7 @@ namespace zizo_shop.Application.Features.Cart.Handlers
                 var cartItems = _context.CartItems
                     .Where(ci => ci.CartId == cart.Id);
                 _context.CartItems.RemoveRange(cartItems);
-                _context.SaveChangesAsync(cancellationToken);
+                await _context.SaveChangesAsync(cancellationToken);
             }
             return Unit.Value;
         }

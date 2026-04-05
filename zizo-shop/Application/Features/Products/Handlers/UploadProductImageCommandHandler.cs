@@ -21,7 +21,7 @@ namespace zizo_shop.Application.Features.Products.Handlers
                 .AnyAsync(p=>p.Id==request.ProductId,cancellationToken);
             if (!productExist )
             {
-                throw new Exception("Product not found");
+                throw new KeyNotFoundException("Product not found.");
             }
             var imagePath = await _fileService.UploadFileAsync(request.File, "product-images");
             var productImage = new ProductImage

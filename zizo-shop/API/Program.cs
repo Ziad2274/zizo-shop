@@ -1,16 +1,23 @@
+using FluentValidation;
+using Hangfire;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 using zizo_shop.API.Services;
+using zizo_shop.Application.Common.Behaviors;
 using zizo_shop.Application.Common.Interfaces;
 using zizo_shop.Application.Features.Auth.Commands;
 using zizo_shop.Application.Features.Auth.Handlers;
 using zizo_shop.Infrastructure.Data;
 using zizo_shop.Infrastructure.Identity;
+using zizo_shop.Infrastructure.Jobs;
+using zizo_shop.Infrastructure.Middlewares;
 using zizo_shop.Infrastructure.Services;
 
 namespace zizo_shop.API
@@ -24,7 +31,9 @@ namespace zizo_shop.API
             // --- SERVICES REGISTRATION SECTION ---
 
             builder.Services.AddControllers();
-            builder.Services.AddEndpointsApiExplorer(); // Ensure this is here
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+            builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
             #region Database Configuration
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -118,18 +127,32 @@ namespace zizo_shop.API
                           .AllowAnyMethod();
                 });
             });
+            builder.Services.AddHangfire(config =>
+            config.UseSqlServerStorage(
+                builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            builder.Services.AddHangfireServer();
+
+            builder.Services.AddScoped<IEmailService, EmailService>();
+            builder.Services.AddScoped<CleanupJobs>();
+           // builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings")); ;
             builder.Services.AddAuthorization();
 
             // --- BUILD THE APP ---
             var app = builder.Build();
 
             // --- MIDDLEWARE PIPELINE SECTION ---
+            app.UseMiddleware<ExceptionMiddleware>();
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            app.UseHangfireDashboard("/hangfire");
+            RecurringJob.AddOrUpdate<CleanupJobs>(
+                "cleanup-carts",
+                job => job.RemoveEmptyCarts(),
+                Cron.Daily);
             app.UseHttpsRedirection();
             app.UseCors("AllowAll");
             // Authentication MUST come before Authorization

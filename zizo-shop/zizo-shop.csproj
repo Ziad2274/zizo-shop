@@ -8,17 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Infrastructure\NewFolder\**" />
-    <Content Remove="Infrastructure\NewFolder\**" />
-    <EmbeddedResource Remove="Infrastructure\NewFolder\**" />
-    <None Remove="Infrastructure\NewFolder\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Include="Properties\launchSettings.json" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="Hangfire" Version="1.8.23" />
+    <PackageReference Include="Hangfire.NetCore" Version="1.8.23" />
+    <PackageReference Include="Hangfire.SqlServer" Version="1.8.23" />
     <PackageReference Include="MediatR" Version="14.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.2" />
