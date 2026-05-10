@@ -185,6 +185,8 @@ namespace zizo_shop.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("Address");
                 });
 
@@ -338,6 +340,9 @@ namespace zizo_shop.Migrations
                     b.Property<decimal>("SubTotal")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal>("TotalPrice")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -391,13 +396,49 @@ namespace zizo_shop.Migrations
                     b.ToTable("OrderItems");
                 });
 
+            modelBuilder.Entity("zizo_shop.Domain.Entities.Payment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PaymentIntentId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Payments");
+                });
+
             modelBuilder.Entity("zizo_shop.Domain.Entities.Product", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("BrandId")
+                    b.Property<Guid?>("BrandId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CategoryId")
@@ -430,7 +471,6 @@ namespace zizo_shop.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("SKU")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("StockQuantity")
@@ -512,7 +552,9 @@ namespace zizo_shop.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("Review");
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("zizo_shop.Domain.Entities.WishlistItem", b =>
@@ -700,6 +742,15 @@ namespace zizo_shop.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("zizo_shop.Domain.Entities.Address", b =>
+                {
+                    b.HasOne("zizo_shop.Infrastructure.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("zizo_shop.Domain.Entities.Cart", b =>
                 {
                     b.HasOne("zizo_shop.Infrastructure.Identity.ApplicationUser", null)
@@ -767,9 +818,7 @@ namespace zizo_shop.Migrations
                 {
                     b.HasOne("zizo_shop.Domain.Entities.Brand", "Brand")
                         .WithMany("Products")
-                        .HasForeignKey("BrandId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("BrandId");
 
                     b.HasOne("zizo_shop.Domain.Entities.Category", "Category")
                         .WithMany("Products")
@@ -801,7 +850,15 @@ namespace zizo_shop.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("zizo_shop.Infrastructure.Identity.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.Navigation("Product");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("zizo_shop.Domain.Entities.WishlistItem", b =>
@@ -812,15 +869,7 @@ namespace zizo_shop.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("zizo_shop.Infrastructure.Identity.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Product");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("zizo_shop.Infrastructure.Identity.RefreshToken", b =>

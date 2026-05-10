@@ -1,7 +1,7 @@
 ﻿namespace zizo_shop.Application.Common.Interfaces
 {
-    public class ICurrentUserService
+    public interface ICurrentUserService
     {
-       public Guid UserId { get; }
+        Guid UserId { get; }
     }
 }

@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using zizo_shop.Domain.Entities;
-using zizo_shop.Infrastructure.Identity; // If RefreshToken is here
+using zizo_shop.Infrastructure.Identity;
 
 namespace zizo_shop.Application.Common.Interfaces
 {
@@ -16,8 +16,10 @@ namespace zizo_shop.Application.Common.Interfaces
         DbSet<OrderItem> OrderItems { get; }
         DbSet<WishlistItem> WishlistItems { get; }
         DbSet<RefreshToken> RefreshTokens { get; }
+        DbSet<Address> Address { get; }
+        DbSet<Review> Reviews { get; }
+        DbSet<Payment> Payments { get; }
 
-        // Core Methods
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 }

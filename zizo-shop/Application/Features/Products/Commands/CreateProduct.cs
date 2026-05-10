@@ -13,7 +13,7 @@ namespace zizo_shop.Application.Features.Products
         string Description,
         decimal Price,
         int Stock,
-        List<ProductImage> Images,
+        List<string> Images,
         Guid CategoryId
     ) : IRequest<Guid>;
 

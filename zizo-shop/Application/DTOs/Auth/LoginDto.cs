@@ -1,13 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
-namespace zizo_shop.Application.DTOs.User
+namespace zizo_shop.Application.DTOs.Auth
 {
     public class LoginDto
     {
         [Required]
-        public string Email { get; set; }
+        public string Email { get; set; } = null!;
         [Required]
-        public string Password { get; set; }
-
+        public string Password { get; set; } = null!;
     }
 }

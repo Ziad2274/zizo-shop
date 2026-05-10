@@ -3,7 +3,7 @@ using zizo_shop.Application.Common.Interfaces;
 using zizo_shop.Application.Features.Products;
 using zizo_shop.Domain.Entities;
 
-namespace zizo_shop.Application.Handellers.Products
+namespace zizo_shop.Application.Features.Products.Handlers
 {
     // Note: [Authorize] should be moved to the Controller, not the Handler.
     public class CreateProductCommandHandler
@@ -30,14 +30,14 @@ namespace zizo_shop.Application.Handellers.Products
                 request.CategoryId
             );
 
-            foreach (var img in request.Images)
-            {
-                product.Images.Add(new ProductImage
+         foreach (var imgUrl in request.Images)
                 {
-                    ImageUrl = img.ImageUrl,
-                    IsCover = img.IsCover
-                });
-            }
+                    product.Images.Add(new ProductImage
+                    {
+                        ImageUrl = imgUrl,
+                       IsCover = false
+                    });
+                }
 
             _context.Products.Add(product);
             await _context.SaveChangesAsync(cancellationToken);

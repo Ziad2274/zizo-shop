@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using zizo_shop.Application.Common.Interfaces;
 using zizo_shop.Application.Features.Cart.Commands;
 
@@ -18,8 +19,8 @@ namespace zizo_shop.Application.Features.Cart.Handlers
         public async Task<Unit> Handle(ClearCartCommand request, CancellationToken cancellationToken)
         {
             var userId = _currentUserService.UserId;
-            var cart = _context.Carts
-                .FirstOrDefault(c => c.UserId == userId);
+            var cart = await _context.Carts
+                .FirstOrDefaultAsync(c => c.UserId == userId,cancellationToken);
             if (cart != null)
                 {
                 var cartItems = _context.CartItems

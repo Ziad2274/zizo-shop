@@ -23,8 +23,11 @@ namespace zizo_shop.Application.Features.Cart.Handlers
             var item = await _context.CartItems
                 .FirstOrDefaultAsync(x => x.ProductId == request.ProductId
                                      && x.Cart.UserId == userId, cancellationToken);
-
-            if (item != null)
+            if (item == null)
+            {
+                throw new Exception("Item not found in cart.");
+            }
+            else 
             {
                 _context.CartItems.Remove(item);
                 await _context.SaveChangesAsync(cancellationToken);

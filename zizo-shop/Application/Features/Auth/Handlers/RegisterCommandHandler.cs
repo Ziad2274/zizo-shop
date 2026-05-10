@@ -3,6 +3,7 @@ using zizo_shop.Application.Features.Auth.Commands;
 using zizo_shop.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using zizo_shop.Domain.Entities;
+using zizo_shop.Application.Common.Interfaces;
 namespace zizo_shop.Application.Features.Auth.Handlers
 
 {
@@ -10,10 +11,18 @@ namespace zizo_shop.Application.Features.Auth.Handlers
             : IRequestHandler<RegisterCommand>
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IEmailService _emailService;
+        private readonly IConfiguration _configration;
 
-        public RegisterCommandHandler(UserManager<ApplicationUser> userManager)
+        public RegisterCommandHandler(
+            UserManager<ApplicationUser> userManager,
+            IEmailService emailService,
+            IConfiguration configuration
+            )
         {
             _userManager = userManager;
+            _emailService = emailService;
+            _configration = configuration;
         }
 
         public async Task Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -25,7 +34,7 @@ namespace zizo_shop.Application.Features.Auth.Handlers
                 PhoneNumber = request.Phone,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
-                Cart = new zizo_shop.Domain.Entities.Cart (
+                Cart = new Domain.Entities.Cart (
                     Guid.NewGuid())
 
 
@@ -41,8 +50,14 @@ namespace zizo_shop.Application.Features.Auth.Handlers
             await _userManager.AddToRoleAsync(user, "User");
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var confirmationLink =
-                $"https://localhost:5001/api/auth/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
+                $"{_configration["App:BaseUrl"]}/api/auth/confirm-email?userId={user.Id}&token={Uri.EscapeDataString(token)}";
 
+
+            await _emailService.SendEmailAsync(
+                user.Email!,
+                "Confirm your email",
+                $"Please confirm your email by clicking on the following link: {confirmationLink}"
+                );
         }
     }
 

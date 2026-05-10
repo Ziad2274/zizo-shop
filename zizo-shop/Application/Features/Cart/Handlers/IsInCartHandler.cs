@@ -9,6 +9,14 @@ namespace zizo_shop.Application.Features.Cart.Handlers
     {
         private readonly ICurrentUserService _currentUserService;   
         private readonly IApplicationDbContext _context;
+        public IsInCartHandler(
+            ICurrentUserService currentUserService,
+            IApplicationDbContext context
+            )
+        {
+            _currentUserService = currentUserService;
+            _context = context;
+        }
         public async Task<bool> Handle(IsInCartQuery request, CancellationToken cancellationToken)
         {
             return await _context.CartItems

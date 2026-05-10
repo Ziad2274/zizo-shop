@@ -1,5 +1,4 @@
-﻿namespace zizo_shop.Application.DTOs.Auth
+namespace zizo_shop.Application.DTOs.Auth
 {
-    public record AuthResponseDto(string Token);
-
+    public record AuthResponseDto(string Token, string RefreshToken);
 }

@@ -27,7 +27,7 @@ namespace zizo_shop.Domain.Entities
         {
             UpdatedAt = DateTime.UtcNow;
         }
-        public void SetId(Guid id)
+        internal void SetId(Guid id)
         {
             Id = id;
         }

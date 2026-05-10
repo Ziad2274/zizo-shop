@@ -23,7 +23,11 @@ namespace zizo_shop.Application.Features.Products.Handlers
             {
                 throw new KeyNotFoundException("Product not found.");
             }
-            var imagePath = await _fileService.UploadFileAsync(request.File, "product-images");
+            var imagePath = await _fileService.UploadFileAsync(
+                request.File.OpenReadStream(),
+                request.File.FileName,
+                "product-images"
+            );
             var productImage = new ProductImage
             {
                 ProductId = request.ProductId,

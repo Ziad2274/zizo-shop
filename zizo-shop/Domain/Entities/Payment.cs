@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static zizo_shop.Domain.Enums.Enums;
+using zizo_shop.Domain.Enums;
 
 namespace zizo_shop.Domain.Entities
 {
@@ -11,9 +6,8 @@ namespace zizo_shop.Domain.Entities
     {
         public Guid OrderId { get; set; }
         public decimal Amount { get; set; }
-
         public PaymentStatus Status { get; set; }
-        public string Provider { get; set; } // Stripe, Cash, etc.
+        public string Provider { get; set; } = null!;
+        public string? PaymentIntentId { get; set; }
     }
-
 }

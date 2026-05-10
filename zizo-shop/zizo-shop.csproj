@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>zizo_shop</RootNamespace>
+	  <UserSecretsId>e2fecbb4-e260-484e-977b-3962beed3189</UserSecretsId>  
   </PropertyGroup>
 
   <ItemGroup>

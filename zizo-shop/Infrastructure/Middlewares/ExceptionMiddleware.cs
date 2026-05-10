@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 
 namespace zizo_shop.Infrastructure.Middlewares
 {
@@ -6,71 +6,68 @@ namespace zizo_shop.Infrastructure.Middlewares
     {
         private readonly RequestDelegate _next;
         private readonly ILogger<ExceptionMiddleware> _logger;
-        public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
+        private readonly IWebHostEnvironment _env;
+
+        public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger, IWebHostEnvironment env)
         {
             _next = next;
             _logger = logger;
+            _env = env;
         }
+
         public async Task InvokeAsync(HttpContext httpContext)
         {
-            try
-            {
-                await _next(httpContext);
-            }
+            try { await _next(httpContext); }
             catch (Exception ex)
             {
-                _logger.LogError($"Something went wrong: {ex}");
-                httpContext.Response.StatusCode = 500;
-                httpContext.Response.ContentType = "application/json";
-                await HandleExceptionAsync(httpContext, ex);
+                _logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);
+                await HandleExceptionAsync(httpContext, ex, _env.IsDevelopment());
             }
         }
-        public static Task HandleExceptionAsync(HttpContext context, Exception exception)
+
+        private static Task HandleExceptionAsync(HttpContext context, Exception exception, bool isDevelopment)
         {
             context.Response.ContentType = "application/json";
-            var statusCode = (int)HttpStatusCode.InternalServerError;
-            var message = "Internal Server Error from the custom middleware.";
-            if (exception != null)
-            {
-                message = exception.Message;
-            }
-            if (exception is UnauthorizedAccessException)
-            {
-                statusCode = (int)HttpStatusCode.Unauthorized;
-                message = "Unauthorized Access";
-            }
-            else if (exception is KeyNotFoundException || exception.Message.Contains("not found"))
-            {
-                statusCode = (int)HttpStatusCode.NotFound;
-                message = "Not Found";
-            }
-            else if (exception is ArgumentException || exception is InvalidOperationException)
-            {
-                statusCode = (int)HttpStatusCode.BadRequest;
-                message = "Bad Request";
-            }
-            else if (exception is FluentValidation.ValidationException valEx)
-            {
-                statusCode = (int)HttpStatusCode.BadRequest;
-                var errors=valEx.Errors.Select(e=>new { e.PropertyName , e.ErrorMessage});
-                message = string.Join("; ", valEx.Errors.Select(e => e.ErrorMessage));
-                return context.Response.WriteAsJsonAsync(new
-                {
-                    statusCode = 400,
-                    Message = "Validation Failed",
-                    Errors = errors
-                });
-            }
-            context.Response.StatusCode = statusCode;
+            int statusCode;
+            string message;
 
-            var response = new
+            switch (exception)
             {
-                statusCode = statusCode
-                ,
+                case FluentValidation.ValidationException valEx:
+                    statusCode = (int)HttpStatusCode.BadRequest;
+                    var errors = valEx.Errors.Select(e => new { e.PropertyName, e.ErrorMessage });
+                    context.Response.StatusCode = statusCode;
+                    return context.Response.WriteAsJsonAsync(new { StatusCode = statusCode, Message = "Validation Failed", Errors = errors });
+
+                case UnauthorizedAccessException:
+                    statusCode = (int)HttpStatusCode.Unauthorized;
+                    message = "Unauthorized access.";
+                    break;
+
+                case KeyNotFoundException:
+                    statusCode = (int)HttpStatusCode.NotFound;
+                    message = exception.Message;
+                    break;
+
+                case InvalidOperationException:
+                case ArgumentException:
+                    statusCode = (int)HttpStatusCode.BadRequest;
+                    message = exception.Message;
+                    break;
+
+                default:
+                    statusCode = (int)HttpStatusCode.InternalServerError;
+                    message = "An unexpected error occurred.";
+                    break;
+            }
+
+            context.Response.StatusCode = statusCode;
+            return context.Response.WriteAsJsonAsync(new
+            {
+                StatusCode = statusCode,
                 Message = message,
-                Details = exception.StackTrace?.ToString()
-            };
-            return context.Response.WriteAsJsonAsync(response);
+                Details = isDevelopment ? exception.StackTrace : null
+            });
         }
     }
 }

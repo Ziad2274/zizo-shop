@@ -1,4 +1,5 @@
-﻿using System.Net.Mail;
+using System.Net;
+using System.Net.Mail;
 using zizo_shop.Application.Common.Interfaces;
 
 namespace zizo_shop.API.Services
@@ -7,31 +8,31 @@ namespace zizo_shop.API.Services
     {
         private readonly IConfiguration _configuration;
 
-        
-       public EmailService(IConfiguration configuration)
+        public EmailService(IConfiguration configuration)
         {
             _configuration = configuration;
         }
+
         public async Task SendEmailAsync(string to, string subject, string body)
         {
-            var smtpHost = new SmtpClient(_configuration["Email:Smtp"], int.Parse(_configuration["Email:Port"]))
+            var smtp     = _configuration["Email:Smtp"]     ?? throw new InvalidOperationException("Email:Smtp missing");
+            var portStr  = _configuration["Email:Port"]     ?? throw new InvalidOperationException("Email:Port missing");
+            var username = _configuration["Email:Username"] ?? throw new InvalidOperationException("Email:Username missing");
+            var password = _configuration["Email:Password"] ?? throw new InvalidOperationException("Email:Password missing");
+            var from     = _configuration["Email:From"]     ?? throw new InvalidOperationException("Email:From missing");
+
+            if (!int.TryParse(portStr, out int port))
+                throw new InvalidOperationException("Email:Port is not a valid integer");
+
+            using var message = new MailMessage(from, to, subject, body) { IsBodyHtml = true };
+
+            using var client = new SmtpClient(smtp, port)
             {
-                Credentials = new System.Net.NetworkCredential(_configuration["Email:Username"], _configuration["Email:Password"]),
+                Credentials = new NetworkCredential(username, password),
                 EnableSsl = true
             };
 
-
-            var mailMessage = new MailMessage
-            {
-                From = new MailAddress(_configuration["Email:From"]),
-                Subject = subject,
-                Body = body,
-                IsBodyHtml = true
-            };
-
-            await smtpHost.SendMailAsync(mailMessage);
-
-
+            await client.SendMailAsync(message);
         }
     }
 }

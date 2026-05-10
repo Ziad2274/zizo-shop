@@ -26,8 +26,8 @@ namespace zizo_shop.Application.Features.Checkout.Handlers
                 .Select(o=>new OrderDto(
                     o.Id,
                     o.CreatedAt,
-                    o.TotalPrice,
-                    o.SubTotal,
+                    o.SubTotal+o.ShippingFee,
+                    o.SubTotal ,
                     o.ShippingFee,
                     o.Status.ToString(),
                     o.Items.Count

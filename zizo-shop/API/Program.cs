@@ -1,5 +1,6 @@
 using FluentValidation;
 using Hangfire;
+using Hangfire.Dashboard;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -13,7 +14,6 @@ using zizo_shop.API.Services;
 using zizo_shop.Application.Common.Behaviors;
 using zizo_shop.Application.Common.Interfaces;
 using zizo_shop.Application.Features.Auth.Commands;
-using zizo_shop.Application.Features.Auth.Handlers;
 using zizo_shop.Infrastructure.Data;
 using zizo_shop.Infrastructure.Identity;
 using zizo_shop.Infrastructure.Jobs;
@@ -28,23 +28,20 @@ namespace zizo_shop.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // --- SERVICES REGISTRATION SECTION ---
-
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
+
             builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+            builder.Services.AddValidatorsFromAssembly(typeof(RegisterCommand).Assembly);
             builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-            #region Database Configuration
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
             builder.Services.AddScoped<IApplicationDbContext>(provider =>
                 provider.GetRequiredService<ApplicationDbContext>());
-            #endregion
-            #region Identity Configuration
+
             builder.Services
-              .AddIdentity<ApplicationUser, IdentityRole<Guid>>(options=>
+                .AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
                 {
                     options.Password.RequireDigit = true;
                     options.Password.RequireLowercase = true;
@@ -53,43 +50,40 @@ namespace zizo_shop.API
                     options.Password.RequiredLength = 6;
                     options.User.RequireUniqueEmail = true;
                     options.SignIn.RequireConfirmedEmail = false;
-                }
-                )
-              .AddEntityFrameworkStores<ApplicationDbContext>()
-              .AddDefaultTokenProviders();
+                })
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
 
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-       .AddJwtBearer(options =>
-       {
-           options.TokenValidationParameters = new TokenValidationParameters
-           {
-               ValidateIssuer = true,
-               ValidateAudience = true,
-               ValidateLifetime = true,
-               ValidateIssuerSigningKey = true,
-               ValidIssuer = builder.Configuration["Jwt:Issuer"],
-               ValidAudience = builder.Configuration["Jwt:Audience"],
-               IssuerSigningKey = new SymmetricSecurityKey(
-                   Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
-
-               // This is the important part for Roles
-               RoleClaimType = ClaimTypes.Role,
-               NameClaimType = ClaimTypes.Name
-           };
-       });
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+                    RoleClaimType = ClaimTypes.Role,
+                    NameClaimType = ClaimTypes.Name
+                };
+            });
 
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
             builder.Services.AddScoped<IFileService, FileService>();
+            builder.Services.AddScoped<IEmailService, EmailService>();
+
             builder.Services.AddMediatR(cfg =>
                 cfg.RegisterServicesFromAssembly(typeof(RegisterCommand).Assembly));
-            #endregion
 
-            // Swagger Configuration
             builder.Services.AddSwaggerGen(c =>
             {
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -99,15 +93,14 @@ namespace zizo_shop.API
                     Scheme = "Bearer",
                     BearerFormat = "JWT",
                     In = ParameterLocation.Header,
-                    Description = "Bearer {token}"
+                    Description = "Enter: Bearer {your token}"
                 });
-
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
                         new OpenApiSecurityScheme
                         {
-                            Reference = new OpenApiReference // This will now be found
+                            Reference = new OpenApiReference
                             {
                                 Type = ReferenceType.SecurityScheme,
                                 Id = "Bearer"
@@ -119,64 +112,61 @@ namespace zizo_shop.API
             });
 
             builder.Services.AddCors(options =>
-            {
                 options.AddPolicy("AllowAll", policy =>
-                {
-                    policy.AllowAnyOrigin()
-                          .AllowAnyHeader()
-                          .AllowAnyMethod();
-                });
-            });
+                    policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+
             builder.Services.AddHangfire(config =>
-            config.UseSqlServerStorage(
-                builder.Configuration.GetConnectionString("DefaultConnection")));
-
+                config.UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
             builder.Services.AddHangfireServer();
-
-            builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<CleanupJobs>();
-           // builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings")); ;
             builder.Services.AddAuthorization();
 
-            // --- BUILD THE APP ---
             var app = builder.Build();
 
-            // --- MIDDLEWARE PIPELINE SECTION ---
+            var wwwroot = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
+            if (!Directory.Exists(wwwroot)) Directory.CreateDirectory(wwwroot);
+
             app.UseMiddleware<ExceptionMiddleware>();
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-            app.UseHangfireDashboard("/hangfire");
-            RecurringJob.AddOrUpdate<CleanupJobs>(
-                "cleanup-carts",
-                job => job.RemoveEmptyCarts(),
-                Cron.Daily);
+
             app.UseHttpsRedirection();
+            app.UseStaticFiles();
             app.UseCors("AllowAll");
-            // Authentication MUST come before Authorization
+            app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
 
-            // Database Seeding
+            app.UseHangfireDashboard("/hangfire", new DashboardOptions
+            {
+                Authorization = new IDashboardAuthorizationFilter[]
+                {
+                    new HangfireAuthFilter()
+                }
+            });
+
+            RecurringJob.AddOrUpdate<CleanupJobs>(
+                "cleanup-orphaned-carts",
+                job => job.RemoveEmptyCarts(),
+                Cron.Daily);
+
             using (var scope = app.Services.CreateScope())
             {
-                var services = scope.ServiceProvider;
                 try
                 {
-                    // Use 'await' or Task.Run to avoid sync-over-async issues
-                    DbInitializer.SeedRolesAsync(services).GetAwaiter().GetResult();
+                    DbInitializer.SeedRolesAsync(scope.ServiceProvider).GetAwaiter().GetResult();
                 }
                 catch (Exception ex)
                 {
-                    var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "An error occurred seeding the DB.");
+                    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "An error occurred seeding the database.");
                 }
             }
-            app.UseRouting();
-            app.UseStaticFiles();
-            
+
             app.MapControllers();
             app.Run();
         }

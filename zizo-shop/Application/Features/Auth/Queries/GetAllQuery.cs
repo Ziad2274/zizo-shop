@@ -1,7 +1,7 @@
-﻿namespace zizo_shop.Application.Features.Auth.Queries
+using MediatR;
+using zizo_shop.Application.DTOs.Auth;
+
+namespace zizo_shop.Application.Features.Auth.Queries
 {
-    using MediatR;
-
-    public record GetAllUsersQuery() : IRequest<List<string>>;
-
+    public record GetAllUsersQuery() : IRequest<List<UserDto>>;
 }

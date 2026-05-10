@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using zizo_shop.Application.Common.Interfaces;
 using zizo_shop.Application.Features.Cart.Commands;
-namespace zizo_shop.Application.Features.Cart.Handelers
+namespace zizo_shop.Application.Features.Cart.Handlers
 {
     public class AddToCartCommandHandler : IRequestHandler<AddToCartCommand>
     {

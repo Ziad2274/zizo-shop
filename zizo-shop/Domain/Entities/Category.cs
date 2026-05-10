@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using static zizo_shop.Domain.Enums.Enums;
 
 namespace zizo_shop.Domain.Entities
 {
