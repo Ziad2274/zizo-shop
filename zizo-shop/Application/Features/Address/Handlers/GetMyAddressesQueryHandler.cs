@@ -20,7 +20,7 @@ namespace zizo_shop.Application.Features.Address.Handlers
         public async Task<List<AddressDto>> Handle(GetMyAddressesQuery request, CancellationToken cancellationToken)
         {
             var userId = _currentUserService.UserId;
-            return await _context.Address
+            return await _context.Addresses
                 .Where(a => a.UserId == userId)
                 .Select(a => new AddressDto(a.Id, a.City, a.Street, a.ZipCode))
                 .ToListAsync(cancellationToken);

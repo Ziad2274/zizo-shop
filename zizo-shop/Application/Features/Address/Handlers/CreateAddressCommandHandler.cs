@@ -24,7 +24,7 @@ namespace zizo_shop.Application.Features.Address.Handlers
                 Street = request.Street,
                 ZipCode = request.ZipCode
             };
-            _context.Address.Add(address);
+            _context.Addresses.Add(address);
             await _context.SaveChangesAsync(cancellationToken);
             return address.Id;
         }

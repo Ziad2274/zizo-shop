@@ -15,7 +15,21 @@ namespace zizo_shop.API.Controllers.Products
         public ProductsController(IMediator mediator) => _mediator = mediator;
 
         [HttpGet]
-        public async Task<IActionResult> GetAll() => Ok(await _mediator.Send(new GetProductsQuery()));
+        public async Task<IActionResult> GetAll(
+            [FromQuery] string? search,
+            [FromQuery] Guid? categoryId,
+            [FromQuery] Guid? brandId,
+            [FromQuery] decimal? minPrice,
+            [FromQuery] decimal? maxPrice,
+            [FromQuery] bool? inStock,
+            [FromQuery] string? sortBy,
+            [FromQuery] int? pageNumber = 1,
+            [FromQuery] int? pageSize = 10
+
+
+            ) => Ok(await _mediator.Send(new GetProductsQuery(
+                search, pageNumber, pageSize, categoryId, brandId, minPrice, maxPrice, inStock, sortBy
+                )));
 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id) => Ok(await _mediator.Send(new GetProductByIdQuery(id)));

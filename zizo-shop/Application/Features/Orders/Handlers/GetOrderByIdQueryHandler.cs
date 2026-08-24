@@ -17,14 +17,14 @@ namespace zizo_shop.Application.Features.Orders.Handlers
 
         public async Task<OrderDetailDto> Handle(GetOrderByIdQuery request, CancellationToken cancellationToken)
         {
-            var o = await _context.Orders.Include(o => o.Items)
+            var order = await _context.Orders
+                .Include(o => o.Items)
                 .FirstOrDefaultAsync(o => o.Id == request.OrderId, cancellationToken)
                 ?? throw new KeyNotFoundException("Order not found.");
-            var user = await _userManager.FindByIdAsync(o.UserId.ToString());
-            return new OrderDetailDto(
-                o.Id, o.CreatedAt, o.TotalPrice, o.SubTotal, o.ShippingFee,
-                o.Status.ToString(), user?.Email ?? "unknown", o.AddressId,
-                o.Items.Select(i => new OrderItemDto(i.ProductId, i.ProductName, i.Price, i.Quantity, i.Price * i.Quantity)).ToList());
+
+            var user = await _userManager.FindByIdAsync(order.UserId.ToString());
+
+            return GetAllOrdersQueryHandler.Map(order, user?.Email ?? "unknown");
         }
     }
 }

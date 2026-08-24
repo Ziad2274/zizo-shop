@@ -20,6 +20,9 @@ namespace zizo_shop.API.Controllers.Orders
         public async Task<IActionResult> GetMyOrders(CancellationToken ct)
             => Ok(await _mediator.Send(new GetMyOrdersQuery(), ct));
 
+        [HttpGet("my/{id:guid}")]
+        public async Task<IActionResult> GetMyOrderDetail(Guid id, CancellationToken ct)
+            => Ok(await _mediator.Send(new GetMyOrderDetailQuery(id), ct)); 
         // Admin: get all orders
         [HttpGet]
         [Authorize(Roles = "Admin")]
@@ -40,5 +43,16 @@ namespace zizo_shop.API.Controllers.Orders
             await _mediator.Send(cmd with { OrderId = id }, ct);
             return Ok("Order status updated.");
         }
+
+ 
+
+        [HttpPatch("{id:guid}/cancel")]
+        public async Task<IActionResult> CancelOrder(Guid id, CancellationToken ct)
+        {
+            await _mediator.Send(new CancelMyOrderCommand(id), ct);
+            return Ok("Order cancelled.");
+        }
+        
+
     }
 }

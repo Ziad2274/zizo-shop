@@ -12,7 +12,7 @@ using zizo_shop.Infrastructure.Data;
 namespace zizo_shop.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260509161547_InitialCreate")]
+    [Migration("20260512091822_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -190,7 +190,7 @@ namespace zizo_shop.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Address");
+                    b.ToTable("Addresses");
                 });
 
             modelBuilder.Entity("zizo_shop.Domain.Entities.Brand", b =>
@@ -316,6 +316,54 @@ namespace zizo_shop.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("zizo_shop.Domain.Entities.Coupon", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("DiscountPercent")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal?>("MaxDiscountAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("MaxUses")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("MinOrderAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UsedCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Coupons");
+                });
+
             modelBuilder.Entity("zizo_shop.Domain.Entities.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -328,8 +376,14 @@ namespace zizo_shop.Migrations
                     b.Property<Guid?>("ApplicationUserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("CouponCode")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -796,7 +850,7 @@ namespace zizo_shop.Migrations
                     b.HasOne("zizo_shop.Domain.Entities.Address", "ShippingAddress")
                         .WithMany()
                         .HasForeignKey("AddressId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("zizo_shop.Infrastructure.Identity.ApplicationUser", null)
@@ -880,7 +934,7 @@ namespace zizo_shop.Migrations
                     b.HasOne("zizo_shop.Infrastructure.Identity.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");

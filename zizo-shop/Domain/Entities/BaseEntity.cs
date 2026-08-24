@@ -8,9 +8,9 @@ namespace zizo_shop.Domain.Entities
 {
     public class BaseEntity
     {
-        public Guid Id { get;protected set; }
-        public DateTime CreatedAt { get; protected set; }
-        public DateTime UpdatedAt { get; protected set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public DateTime CreatedAt { get; internal set; }
+        public DateTime UpdatedAt { get; internal set; }
         public bool IsDeleted { get; protected set; }= false;
         public BaseEntity()
         {

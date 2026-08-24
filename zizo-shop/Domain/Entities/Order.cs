@@ -7,11 +7,13 @@ namespace zizo_shop.Domain.Entities
         public Guid UserId { get; private set; }
         public decimal SubTotal { get; private set; }
         public decimal ShippingFee { get; private set; }
+        public decimal DiscountAmount { get; private set; }
         public decimal TotalPrice { get; private set; }
+        public string? CouponCode { get; private set; }
         public OrderStatus Status { get; private set; }
         public Guid AddressId { get; set; }
         public Address ShippingAddress { get; set; } = null!;
-        public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
+        public List<OrderItem> Items { get; set; } = new();
 
         public Order(Guid userId, decimal shippingFee = 0)
         {
@@ -36,12 +38,19 @@ namespace zizo_shop.Domain.Entities
             RecalculateSubTotal();
         }
 
-        public void RecalculateSubTotal()
+      
+        public void ApplyDiscount(decimal amount, string couponCode)
+        {
+            if (amount <= 0) throw new ArgumentException("Discount amount must be greater than zero.");
+            DiscountAmount = amount;
+            CouponCode = couponCode;
+            RecalculateSubTotal();
+        }
+         private void RecalculateSubTotal()
         {
             SubTotal = Items.Sum(i => i.Price * i.Quantity);
-            TotalPrice = SubTotal + ShippingFee;
-        }
-
+            TotalPrice = Math.Max(0,SubTotal + ShippingFee-DiscountAmount);
+        } 
         public void MarkAsPaid()
         {
             if (Status != OrderStatus.Pending) throw new InvalidOperationException("Only pending orders can be marked as paid.");

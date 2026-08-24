@@ -23,17 +23,17 @@ namespace zizo_shop.Application.Features.Checkout.Handlers
             return await _context.Orders
                 .Where(o => o.UserId == userId)
                 .OrderByDescending(o => o.CreatedAt)
-                .Select(o=>new OrderDto(
+                .Select(o => new OrderDto(
                     o.Id,
                     o.CreatedAt,
-                    o.SubTotal+o.ShippingFee,
-                    o.SubTotal ,
+                    o.TotalPrice, // You already have this property in the Entity!
+                    o.SubTotal,
                     o.ShippingFee,
                     o.Status.ToString(),
-                    o.Items.Count
-                    )  )
-                .ToListAsync(cancellationToken)
-                 ;
+                    o.Items.Count,
+                    new List<OrderItemDto>() // Passing empty list for summary view
+                ))
+                .ToListAsync(cancellationToken);
         }
     }
 }

@@ -7,6 +7,8 @@
         decimal SubTotal,
         decimal ShippingFee,
         string Status,
-        int ItemCount
+        int ItemCount,
+        List<OrderItemDto> Items
     );
+
 }

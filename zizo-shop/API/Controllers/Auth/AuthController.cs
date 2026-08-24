@@ -58,4 +58,19 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     [HttpGet("ping")]
     public IActionResult Ping() => Ok("Auth controller is reachable.");
+    [Authorize(Roles = "Admin")]
+    [HttpPatch("users/{userId:guid}/role")]
+    public async Task<IActionResult> ChangeUserRole(Guid userId,[FromBody] ChangeUserRoleCommand command)
+    {
+        await _mediator.Send(command with {UserId = userId });
+        return Ok("User role updated successfully.");
+    }
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordCommand command)
+    {
+        await _mediator.Send( command);
+        return Ok("Password changed successfully.");
+    }
+
 }

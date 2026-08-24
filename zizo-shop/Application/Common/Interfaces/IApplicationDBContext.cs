@@ -9,6 +9,7 @@ namespace zizo_shop.Application.Common.Interfaces
         DbSet<Product> Products { get; }
         DbSet<Category> Categories { get; }
         DbSet<Brand> Brands { get; }
+        DbSet <Coupon> Coupons { get; }
         DbSet<ProductImage> ProductImages { get; }
         DbSet<Cart> Carts { get; }
         DbSet<CartItem> CartItems { get; }
@@ -16,7 +17,7 @@ namespace zizo_shop.Application.Common.Interfaces
         DbSet<OrderItem> OrderItems { get; }
         DbSet<WishlistItem> WishlistItems { get; }
         DbSet<RefreshToken> RefreshTokens { get; }
-        DbSet<Address> Address { get; }
+        DbSet<Address> Addresses { get; }
         DbSet<Review> Reviews { get; }
         DbSet<Payment> Payments { get; }
 

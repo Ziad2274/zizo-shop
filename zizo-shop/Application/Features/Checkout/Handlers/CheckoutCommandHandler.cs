@@ -13,18 +13,15 @@ namespace zizo_shop.Application.Features.Checkout.Handlers
     {
         private readonly IApplicationDbContext _context;
         private readonly ICurrentUserService _currentUserService;
-        private readonly IEmailService _emailService;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public CheckoutCommandHandler(
             IApplicationDbContext context,
             ICurrentUserService currentUserService,
-            IEmailService emailService,
             UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _currentUserService = currentUserService;
-            _emailService = emailService;
             _userManager = userManager;
         }
 
@@ -35,7 +32,7 @@ namespace zizo_shop.Application.Features.Checkout.Handlers
                 throw new UnauthorizedAccessException("User is not authenticated.");
 
             // Validate that address belongs to the current user
-            var addressExists = await _context.Address
+            var addressExists = await _context.Addresses
                 .AnyAsync(a => a.Id == request.AddressId && a.UserId == userId, cancellationToken);
             if (!addressExists)
                 throw new KeyNotFoundException("Shipping address not found.");
@@ -48,12 +45,34 @@ namespace zizo_shop.Application.Features.Checkout.Handlers
             if (cart == null || !cart.Items.Any())
                 throw new InvalidOperationException("Your cart is empty.");
 
+           
+            Coupon? coupon = null;
+            if(!string.IsNullOrWhiteSpace(request.CouponCode))
+                {
+                coupon = await _context.Coupons.FirstOrDefaultAsync(c => c.Code == request.CouponCode.ToUpper(), cancellationToken)
+                  ??  throw new InvalidOperationException("Invalid or expired coupon code.");
+                
+                var cartTotal = cart.Items.Sum(i => (i.Product.DiscountPrice ?? i.Product.Price) * i.Quantity);
+                if(!coupon.IsValid(cartTotal))
+                
+                    throw new InvalidOperationException("Coupon is not valid for the current cart total.");
+                coupon.IncrementUsage();
+            }
+
+
             var order = new Order(userId) { AddressId = request.AddressId };
 
             foreach (var item in cart.Items)
             {
+                if(item.Quantity > item.Product.StockQuantity)
+                    throw new InvalidOperationException($"Not enough stock for product '{item.Product.Name}', Requested: {item.Quantity}.");
                 item.Product.RemoveStock(item.Quantity);
                 order.AddItem(item.Product, item.Quantity);
+            }
+            if (coupon != null)
+            {
+               var discountAmount = coupon.Calculate(order.SubTotal);
+                order.ApplyDiscount(discountAmount, coupon.Code);
             }
 
             _context.Orders.Add(order);

@@ -1,10 +1,11 @@
-using FluentValidation;
+﻿using FluentValidation;
 using Hangfire;
 using Hangfire.Dashboard;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
@@ -28,18 +29,26 @@ namespace zizo_shop.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // ── Controllers & Swagger ─────────────────────────────────────────
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
 
+            // ── FluentValidation + MediatR pipeline ───────────────────────────
             builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
             builder.Services.AddValidatorsFromAssembly(typeof(RegisterCommand).Assembly);
-            builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+            builder.Services.AddTransient(
+                typeof(IPipelineBehavior<,>),
+                typeof(ValidationBehavior<,>));
 
+            // ── Database ──────────────────────────────────────────────────────
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(
+                    builder.Configuration.GetConnectionString("DefaultConnection")));
+
             builder.Services.AddScoped<IApplicationDbContext>(provider =>
                 provider.GetRequiredService<ApplicationDbContext>());
 
+            // ── Identity ──────────────────────────────────────────────────────
             builder.Services
                 .AddIdentity<ApplicationUser, IdentityRole<Guid>>(options =>
                 {
@@ -50,10 +59,14 @@ namespace zizo_shop.API
                     options.Password.RequiredLength = 6;
                     options.User.RequireUniqueEmail = true;
                     options.SignIn.RequireConfirmedEmail = false;
+                    options.Lockout.MaxFailedAccessAttempts = 5;
+                    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                    options.Lockout.AllowedForNewUsers = true;
                 })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
+            // ── JWT Authentication ────────────────────────────────────────────
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -76,16 +89,27 @@ namespace zizo_shop.API
                 };
             });
 
+            builder.Services.AddAuthorization();
+
+            // ── Services ──────────────────────────────────────────────────────
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
             builder.Services.AddScoped<IFileService, FileService>();
             builder.Services.AddScoped<IEmailService, EmailService>();
 
+            // ── MediatR ───────────────────────────────────────────────────────
             builder.Services.AddMediatR(cfg =>
                 cfg.RegisterServicesFromAssembly(typeof(RegisterCommand).Assembly));
 
+            // ── Swagger ───────────────────────────────────────────────────────
             builder.Services.AddSwaggerGen(c =>
             {
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "Zizo Shop API",
+                    Version = "v1"
+                });
+
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Name = "Authorization",
@@ -95,6 +119,7 @@ namespace zizo_shop.API
                     In = ParameterLocation.Header,
                     Description = "Enter: Bearer {your token}"
                 });
+
                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
@@ -103,7 +128,7 @@ namespace zizo_shop.API
                             Reference = new OpenApiReference
                             {
                                 Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
+                                Id   = "Bearer"
                             }
                         },
                         Array.Empty<string>()
@@ -111,29 +136,53 @@ namespace zizo_shop.API
                 });
             });
 
+            // ── CORS ──────────────────────────────────────────────────────────
             builder.Services.AddCors(options =>
                 options.AddPolicy("AllowAll", policy =>
-                    policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+                    policy.AllowAnyOrigin()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()));
 
+            // ── Hangfire ──────────────────────────────────────────────────────
             builder.Services.AddHangfire(config =>
-                config.UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+                config.UseSqlServerStorage(
+                    builder.Configuration.GetConnectionString("DefaultConnection")));
+
             builder.Services.AddHangfireServer();
             builder.Services.AddScoped<CleanupJobs>();
-            builder.Services.AddAuthorization();
 
+            // ── Health checks ─────────────────────────────────────────────────
+            //builder.Services.AddHealthChecks()
+            //    .AddDbContextCheck<ApplicationDbContext>();
+
+            // ─────────────────────────────────────────────────────────────────
             var app = builder.Build();
+            // ─────────────────────────────────────────────────────────────────
 
-            var wwwroot = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
-            if (!Directory.Exists(wwwroot)) Directory.CreateDirectory(wwwroot);
+            // ── Ensure wwwroot exists for file uploads ─────────────────────────
+            var wwwroot = Path.Combine(
+                builder.Environment.ContentRootPath, "wwwroot");
+            if (!Directory.Exists(wwwroot))
+                Directory.CreateDirectory(wwwroot);
 
+            // ── Exception middleware (first so it wraps everything) ────────────
             app.UseMiddleware<ExceptionMiddleware>();
 
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+            // ── HSTS (production only) ────────────────────────────────────────
+            if (!app.Environment.IsDevelopment())
+                app.UseHsts();
 
+            // ── Swagger (development only) ────────────────────────────────────
+           
+                app.UseSwagger();
+            app.UseSwaggerUI(c => {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Zizo Shop API v1");
+                c.RoutePrefix = string.Empty;
+            });
+
+
+
+            // ── Middleware order ──────────────────────────────────────────────
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCors("AllowAll");
@@ -141,6 +190,7 @@ namespace zizo_shop.API
             app.UseAuthentication();
             app.UseAuthorization();
 
+            // ── Hangfire dashboard (Admin only) ───────────────────────────────
             app.UseHangfireDashboard("/hangfire", new DashboardOptions
             {
                 Authorization = new IDashboardAuthorizationFilter[]
@@ -149,20 +199,44 @@ namespace zizo_shop.API
                 }
             });
 
+            // ── Recurring jobs ────────────────────────────────────────────────
             RecurringJob.AddOrUpdate<CleanupJobs>(
-                "cleanup-orphaned-carts",
+                "cleanup-empty-carts",
                 job => job.RemoveEmptyCarts(),
                 Cron.Daily);
 
+            RecurringJob.AddOrUpdate<CleanupJobs>(
+                "expire-old-coupons",
+                job => job.ExpireOldCoupon(),
+                Cron.Hourly);
+
+            RecurringJob.AddOrUpdate<CleanupJobs>(
+                "revoke-expired-refresh-tokens",
+                job => job.RevokeExpiredRefreshTokens(),
+                Cron.Daily);
+
+            RecurringJob.AddOrUpdate<CleanupJobs>(
+                "cancel-abandoned-orders",
+                job => job.CancelAbandonedPendingOrders(),
+                Cron.Daily);
+
+            // ── Health check endpoint ─────────────────────────────────────────
+            //app.MapHealthChecks("/health");
+
+            // ── Database seeding ──────────────────────────────────────────────
             using (var scope = app.Services.CreateScope())
             {
                 try
                 {
-                    DbInitializer.SeedRolesAsync(scope.ServiceProvider).GetAwaiter().GetResult();
+                    DbInitializer
+                        .SeedRolesAsync(scope.ServiceProvider)
+                        .GetAwaiter()
+                        .GetResult();
                 }
                 catch (Exception ex)
                 {
-                    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                    var logger = scope.ServiceProvider
+                        .GetRequiredService<ILogger<Program>>();
                     logger.LogError(ex, "An error occurred seeding the database.");
                 }
             }

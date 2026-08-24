@@ -27,6 +27,7 @@ namespace zizo_shop.Infrastructure.Middlewares
 
         private static Task HandleExceptionAsync(HttpContext context, Exception exception, bool isDevelopment)
         {
+            
             context.Response.ContentType = "application/json";
             int statusCode;
             string message;

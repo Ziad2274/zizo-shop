@@ -92,6 +92,28 @@ namespace zizo_shop.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Coupons",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    DiscountPercent = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    MaxDiscountAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    MinOrderAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    MaxUses = table.Column<int>(type: "int", nullable: false),
+                    UsedCount = table.Column<int>(type: "int", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Coupons", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Payments",
                 columns: table => new
                 {
@@ -132,7 +154,7 @@ namespace zizo_shop.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Address",
+                name: "Addresses",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -146,9 +168,9 @@ namespace zizo_shop.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Address", x => x.Id);
+                    table.PrimaryKey("PK_Addresses", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Address_AspNetUsers_UserId",
+                        name: "FK_Addresses_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
@@ -279,7 +301,7 @@ namespace zizo_shop.Migrations
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -325,7 +347,9 @@ namespace zizo_shop.Migrations
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     SubTotal = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     ShippingFee = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    DiscountAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     TotalPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    CouponCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false),
                     AddressId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ApplicationUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -337,11 +361,11 @@ namespace zizo_shop.Migrations
                 {
                     table.PrimaryKey("PK_Orders", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Orders_Address_AddressId",
+                        name: "FK_Orders_Addresses_AddressId",
                         column: x => x.AddressId,
-                        principalTable: "Address",
+                        principalTable: "Addresses",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Orders_AspNetUsers_ApplicationUserId",
                         column: x => x.ApplicationUserId,
@@ -480,8 +504,8 @@ namespace zizo_shop.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Address_UserId",
-                table: "Address",
+                name: "IX_Addresses_UserId",
+                table: "Addresses",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -543,6 +567,12 @@ namespace zizo_shop.Migrations
                 name: "IX_Categories_ParentCategoryId",
                 table: "Categories",
                 column: "ParentCategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Coupons_Code",
+                table: "Coupons",
+                column: "Code",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_OrderItems_OrderId",
@@ -623,6 +653,9 @@ namespace zizo_shop.Migrations
                 name: "CartItems");
 
             migrationBuilder.DropTable(
+                name: "Coupons");
+
+            migrationBuilder.DropTable(
                 name: "OrderItems");
 
             migrationBuilder.DropTable(
@@ -653,7 +686,7 @@ namespace zizo_shop.Migrations
                 name: "Products");
 
             migrationBuilder.DropTable(
-                name: "Address");
+                name: "Addresses");
 
             migrationBuilder.DropTable(
                 name: "Brands");

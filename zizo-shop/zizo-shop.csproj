@@ -35,9 +35,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Application\Features\Dashboard\Commands\" />
     <Folder Include="Application\Services\" />
     <Folder Include="Infrastructure\Repositories\" />
-    <Folder Include="Migrations\" />
+    <Folder Include="NewFolder\" />
   </ItemGroup>
 
 </Project>

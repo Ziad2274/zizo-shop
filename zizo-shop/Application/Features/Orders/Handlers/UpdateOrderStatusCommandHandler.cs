@@ -21,7 +21,15 @@ namespace zizo_shop.Application.Features.Orders.Handlers
                 case "pay":     order.MarkAsPaid();    break;
                 case "ship":    order.MarkAsShipped(); break;
                 case "deliver": order.MarkAsDelivered(); break;
-                case "cancel":  order.Cancel();        break;
+                case "cancel":  order.Cancel(); 
+                    var productIds = order.Items.Select(i => i.ProductId).ToList();
+                    var products = await _context.Products.Where(p => productIds.Contains(p.Id)).ToListAsync(cancellationToken);
+                    foreach (var item in order.Items)
+                    {
+                        var product = products.FirstOrDefault(p => p.Id == item.ProductId);
+                            product.UpdateStock(item.Quantity);
+                    }
+                    break;
                 default: throw new ArgumentException($"Unknown action '{request.Action}'. Use: pay, ship, deliver, cancel.");
             }
             await _context.SaveChangesAsync(cancellationToken);

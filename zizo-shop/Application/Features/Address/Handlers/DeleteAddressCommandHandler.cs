@@ -18,13 +18,13 @@ namespace zizo_shop.Application.Features.Address.Handlers
 
         public async Task Handle(DeleteAddressCommand request, CancellationToken cancellationToken)
         {
-            var address = await _context.Address
+            var address = await _context.Addresses
                 .FirstOrDefaultAsync(a => a.Id == request.AddressId && a.UserId == _currentUserService.UserId, cancellationToken);
 
             if (address == null)
                 throw new KeyNotFoundException("Address not found.");
 
-            _context.Address.Remove(address);
+            _context.Addresses.Remove(address);
             await _context.SaveChangesAsync(cancellationToken);
         }
     }
