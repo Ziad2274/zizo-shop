@@ -56,8 +56,7 @@ docker run -p 8080:8080 zizo-shop
 
 ## Live demo
 
-[Add your deployed URL here once live.]
-
+http://zizoshop.runasp.net/index.html
 ## Frontend
 
 The Angular storefront for this API lives at [shop-app](https://github.com/Ziad2274/shop-app).
