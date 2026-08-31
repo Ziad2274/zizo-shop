@@ -47,16 +47,9 @@ dotnet run --project API
 
 Update the connection string in `appsettings.json` (or `appsettings.Development.json`) to point at your local SQL Server instance before running migrations.
 
-### With Docker
 
-```bash
-docker build -t zizo-shop .
-docker run -p 8080:8080 zizo-shop
-```
 
 ## Live demo
 
 http://zizoshop.runasp.net/index.html
-## Frontend
 
-The Angular storefront for this API lives at [shop-app](https://github.com/Ziad2274/shop-app).
